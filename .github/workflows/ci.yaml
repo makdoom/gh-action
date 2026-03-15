@@ -1,0 +1,38 @@
+name: Deploy Client
+
+on:
+  workflow_dispatch:
+    inputs:
+      client:
+        description: "Select Client"
+        required: true
+        type: choice
+        options:
+          - kmjl
+          - candere
+          - pml
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      CLIENT: ${{ github.event.inputs.client }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install
+        run: npm install
+
+      - name: Build Client
+        run: npm run build
+
+      - name: Log
+        run: echo "Deploying for $CLIENT"
