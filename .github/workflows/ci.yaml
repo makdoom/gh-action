@@ -1,5 +1,5 @@
 name: Deploy Client
-run-name: Deploy ${{ github.event.inputs.client }} by @${{ github.actor }}
+run-name: Deploying to ${{ github.event.inputs.client }} by @${{ github.actor }}
 
 on:
   workflow_dispatch:
@@ -14,6 +14,8 @@ jobs:
 
     env:
       CLIENT: ${{ github.event.inputs.client }}
+      REACT_APP_OPENAI_API_KEY: ${{ secrets.REACT_APP_OPENAI_API_KEY }}
+      REACT_APP_JWT_URL: ${{ secrets.REACT_APP_JWT_URL }}
 
     steps:
       - name: Checkout Repository
@@ -28,10 +30,10 @@ jobs:
       - name: Validate Client
         run: |
           if ! jq -e ".\"$CLIENT\"" clients.json > /dev/null; then
-            echo "❌ Client '$CLIENT' not found in clients.json"
+            echo "##### Client '$CLIENT' not found in clients.json ######"
             exit 1
           fi
-          echo "✅ Client '$CLIENT' found"
+          echo "##### Client '$CLIENT' found ######"
 
       - name: Inject Client ENV Variables
         run: |
@@ -62,4 +64,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: react-build-${{ env.CLIENT }}
-          path: dist
+          path: build
