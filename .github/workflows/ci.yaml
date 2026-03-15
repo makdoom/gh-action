@@ -36,3 +36,9 @@ jobs:
 
       - name: Log
         run: echo "Deploying for $CLIENT"
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build-${{ env.CLIENT }}
+          path: dist
