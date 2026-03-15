@@ -32,7 +32,7 @@ jobs:
         run: npm install
 
       - name: Build Client
-        run: npm run build
+        run: CLIENT=$CLIENT npm run build
 
       - name: Log
         run: echo "Deploying for $CLIENT"
@@ -41,4 +41,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: react-build-${{ env.CLIENT }}
-          path: dist
+          path: build
