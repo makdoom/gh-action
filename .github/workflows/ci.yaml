@@ -1,16 +1,12 @@
 name: Deploy Client
+run-name: Deploy ${{ github.event.inputs.client }} by @${{ github.actor }}
 
 on:
   workflow_dispatch:
     inputs:
       client:
-        description: "Select Client"
+        description: "Enter Client Code (KMJL, CANDERE, DNETTMPL)"
         required: true
-        type: choice
-        options:
-          - kmjl
-          - candere
-          - pml
 
 jobs:
   deploy:
@@ -20,25 +16,50 @@ jobs:
       CLIENT: ${{ github.event.inputs.client }}
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v5
+
+      - name: Normalize Client Name
+        run: |
+          CLIENT=$(echo "$CLIENT" | tr '[:lower:]' '[:upper:]')
+          echo "CLIENT=$CLIENT" >> $GITHUB_ENV
+          echo "Normalized client: $CLIENT"
+
+      - name: Validate Client
+        run: |
+          if ! jq -e ".\"$CLIENT\"" clients.json > /dev/null; then
+            echo "❌ Client '$CLIENT' not found in clients.json"
+            exit 1
+          fi
+          echo "✅ Client '$CLIENT' found"
+
+      - name: Inject Client ENV Variables
+        run: |
+          echo "Loading environment variables for $CLIENT"
+
+          jq -r ".\"$CLIENT\" | to_entries[] | \"\(.key)=\(.value)\"" clients.json >> $GITHUB_ENV
+
+          echo "Environment variables loaded"
+
+      - name: Show Loaded ENV (debug)
+        run: |
+          env | grep REACT_APP
 
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
           node-version: 20
 
-      - name: Install
+      - name: Install Dependencies
         run: npm install
 
       - name: Build Client
-        run: CLIENT=$CLIENT npm run build
-
-      - name: Log
-        run: echo "Deploying for $CLIENT"
+        run: |
+          echo "Building client $CLIENT"
+          npm run build
 
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: react-build-${{ env.CLIENT }}
-          path: build
+          path: dist
